@@ -1,0 +1,4 @@
+__pycache__
+venv
+pretrained_models/
+pretrained_models.tar.gz

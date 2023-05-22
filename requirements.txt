@@ -1,0 +1,8 @@
+flask
+torch
+opencv-python
+Pillow
+einops
+ninja==1.10.2
+einops==0.3.2
+gradio
