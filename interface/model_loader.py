@@ -52,28 +52,26 @@ class Model:
         w1 = torch.tensor(w1).to("cuda")
         w1_initial = torch.tensor(w1_initial).to("cuda")
 
-        x1, w1 = self.net.decoder(
+        x1, w1, f1 = self.net.decoder(
             [w1],
             input_is_latent=True,
             randomize_noise=False,
-            return_feature_map=False,
+            return_feature_map=True,
             return_latents=True,
-            truncation=self.truncation,
-            truncation_latent=self.net.latent_avg[0],
         )
-        x1, _, f1 = self.net.decoder(
+        x1, w1_initial, f1 = self.net.decoder(
             [w1_initial],
-            input_is_latent=False,
+            input_is_latent=True,
             randomize_noise=False,
             return_feature_map=True,
             return_latents=True,
-            truncation=self.truncation,
-            truncation_latent=self.net.latent_avg[0],
         )
+
         return (w1, w1_initial, f1)
 
     def zoom(self, latents, dz, sxsy=[0, 0], stop_points=[]):
         w1, w1_initial, f1 = self.latents_to_tensor(latents)
+        w1 = w1_initial.clone()
 
         vec_num = abs(dz) / 5
         dz = 100 * np.sign(dz)
@@ -131,7 +129,7 @@ class Model:
         self, latents, dxy, sxsy=[0, 0], stop_points=[], zoom_in=False, zoom_out=False
     ):
         w1, w1_initial, f1 = self.latents_to_tensor(latents)
-
+        w1 = w1_initial.clone()
         dz = -5.0 if zoom_in else 0.0
         dz = 5.0 if zoom_out else dz
 
@@ -192,6 +190,7 @@ class Model:
 
     def change_style(self, latents):
         w1, w1_initial, f1 = self.latents_to_tensor(latents)
+        w1 = w1_initial.clone()
 
         z1 = torch.randn(1, 512).to("cuda")
         x1, w2 = self.net.decoder(
@@ -203,11 +202,10 @@ class Model:
             truncation_latent=self.net.latent_avg[0],
         )
         w1[:, 6:] = w2.detach()[:, 0]
-        x1, w1_new, f1 = self.net.decoder(
+        x1, w1_new = self.net.decoder(
             [w1],
             input_is_latent=True,
             randomize_noise=False,
-            return_feature_map=True,
             return_latents=True,
         )
         result = (
@@ -217,7 +215,7 @@ class Model:
             result,
             {
                 "w1": w1_new.cpu().detach().numpy(),
-                "w1_initial": w1_initial.cpu().detach().numpy(),
+                "w1_initial": w1_new.cpu().detach().numpy(),
             },
         )
 
@@ -237,6 +235,6 @@ class Model:
             result,
             {
                 "w1": w1_new.cpu().detach().numpy(),
-                "w1_initial": w1_initial.cpu().detach().numpy(),
+                "w1_initial": w1_new.cpu().detach().numpy(),
             },
         )

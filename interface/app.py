@@ -28,7 +28,7 @@ def random_sample(model_name: str):
     return pil_img, model_name, latents
 
 
-def zoom(dx, dy, dz, model_state, latents_state):
+def zoom(model_state, latents_state, dx=0, dy=0, dz=0):
     model = models[model_state]
     dx = dx
     dy = dy
@@ -43,7 +43,7 @@ def zoom(dx, dy, dz, model_state, latents_state):
     return pil_img, latents_state
 
 
-def translate(dx, dy, dz, model_state, latents_state):
+def translate(model_state, latents_state, dx=0, dy=0, dz=0):
     model = models[model_state]
 
     dx = dx
@@ -130,19 +130,19 @@ with gr.Blocks() as block:
     )
     dx.change(
         translate,
-        inputs=[dx, dy, dz, model_state, latents_state],
+        inputs=[model_state, latents_state, dx, dy, dz],
         outputs=[image, latents_state],
         show_progress=False,
     )
     dy.change(
         translate,
-        inputs=[dx, dy, dz, model_state, latents_state],
+        inputs=[model_state, latents_state, dx, dy, dz],
         outputs=[image, latents_state],
         show_progress=False,
     )
     dz.change(
         zoom,
-        inputs=[dx, dy, dz, model_state, latents_state],
+        inputs=[model_state, latents_state, dx, dy, dz],
         outputs=[image, latents_state],
         show_progress=False,
     )
