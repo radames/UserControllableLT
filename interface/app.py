@@ -1,20 +1,23 @@
 import gradio as gr
-
 from .model_loader import Model
 from PIL import Image
 import cv2
 import io
+from huggingface_hub import snapshot_download
+
+models_path = snapshot_download(repo_id="radames/UserControllableLT", repo_type="model")
+
 
 # models fron pretrained/latent_transformer folder
 models_files = {
-    "anime": "pretrained_models/latent_transformer/anime.pt",
-    "car": "pretrained_models/latent_transformer/car.pt",
-    "cat": "pretrained_models/latent_transformer/cat.pt",
-    "church": "pretrained_models/latent_transformer/church.pt",
-    "ffhq": "pretrained_models/latent_transformer/ffhq.pt",
+    "anime": "anime.pt",
+    "car": "car.pt",
+    "cat": "cat.pt",
+    "church": "church.pt",
+    "ffhq": "ffhq.pt",
 }
 
-models = {name: Model(path) for name, path in models_files.items()}
+models = {name: Model(models_path + "/" + path) for name, path in models_files.items()}
 
 
 def cv_to_pil(img):
