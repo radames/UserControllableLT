@@ -1,5 +1,8 @@
 import gradio as gr
-from .model_loader import Model
+import sys  
+sys.path.append(".")
+sys.path.append("..")
+from model_loader import Model
 from PIL import Image
 import cv2
 import io
