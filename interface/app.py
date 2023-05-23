@@ -28,13 +28,13 @@ def random_sample(model_name: str):
     return pil_img, model_name, latents
 
 
-def zoom(model_state, latents_state, dx=0, dy=0, dz=0):
+def zoom(model_state, latents_state, dx=0, dy=0, dz=0, sxsy=[128, 128]):
     model = models[model_state]
     dx = dx
     dy = dy
     dz = dz
-    sx = 100
-    sy = 100
+    sx = sxsy[0]
+    sy = sxsy[1]
     stop_points = []
     img, latents_state = model.zoom(
         latents_state, dz, sxsy=[sx, sy], stop_points=stop_points
@@ -43,14 +43,14 @@ def zoom(model_state, latents_state, dx=0, dy=0, dz=0):
     return pil_img, latents_state
 
 
-def translate(model_state, latents_state, dx=0, dy=0, dz=0):
+def translate(model_state, latents_state, dx=0, dy=0, dz=0, sxsy=[128, 128]):
     model = models[model_state]
 
     dx = dx
     dy = dy
     dz = dz
-    sx = 128
-    sy = 128
+    sx = sxsy[0]
+    sy = sxsy[1]
     stop_points = []
     zi = False
     zo = False
@@ -82,9 +82,15 @@ def reset(model_state, latents_state):
     return pil_img, latents_state
 
 
+def image_click(evt: gr.SelectData):
+    click_pos = evt.index
+    return click_pos
+
+
 with gr.Blocks() as block:
     model_state = gr.State(value="cat")
     latents_state = gr.State({})
+    sxsy = gr.State([128, 128])
     gr.Markdown("# UserControllableLT: User controllable latent transformer")
     gr.Markdown("## Select model")
     with gr.Row():
@@ -99,13 +105,13 @@ with gr.Blocks() as block:
                 reset_btn = gr.Button("Reset")
 
             dx = gr.Slider(
-                minimum=-128, maximum=128, step_size=0.1, label="dx", value=0.0
+                minimum=-256, maximum=256, step_size=0.1, label="dx", value=0.0
             )
             dy = gr.Slider(
-                minimum=-128, maximum=128, step_size=0.1, label="dy", value=0.0
+                minimum=-256, maximum=256, step_size=0.1, label="dy", value=0.0
             )
             dz = gr.Slider(
-                minimum=-128, maximum=128, step_size=0.1, label="dz", value=0.0
+                minimum=-256, maximum=256, step_size=0.1, label="dz", value=0.0
             )
 
             with gr.Row():
@@ -113,10 +119,10 @@ with gr.Blocks() as block:
 
         with gr.Column():
             image = gr.Image(type="pil", label="")
+    image.select(image_click, inputs=None, outputs=sxsy)
     button.click(
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
     )
-
     reset_btn.click(
         reset,
         inputs=[model_state, latents_state],
@@ -130,22 +136,22 @@ with gr.Blocks() as block:
     )
     dx.change(
         translate,
-        inputs=[model_state, latents_state, dx, dy, dz],
+        inputs=[model_state, latents_state, dx, dy, dz, sxsy],
         outputs=[image, latents_state],
         show_progress=False,
     )
     dy.change(
         translate,
-        inputs=[model_state, latents_state, dx, dy, dz],
+        inputs=[model_state, latents_state, dx, dy, dz, sxsy],
         outputs=[image, latents_state],
         show_progress=False,
     )
     dz.change(
         zoom,
-        inputs=[model_state, latents_state, dx, dy, dz],
+        inputs=[model_state, latents_state, dx, dy, dz, sxsy],
         outputs=[image, latents_state],
         show_progress=False,
     )
 
-
+block.queue()
 block.launch()
