@@ -1,3 +1,13 @@
+---
+title: UserControllableLT 
+emoji: 🕹️
+colorFrom: gray
+colorTo: green
+sdk: gradio
+sdk_version: 3.32.0
+app_file: interface/app.py
+pinned: false
+---
 # User-Controllable Latent Transformer for StyleGAN Image Layout Editing
   <a href="https://arxiv.org/abs/2208.12408"><img src="https://img.shields.io/badge/arXiv-2208.12408-b31b1b.svg"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
