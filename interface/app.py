@@ -1,5 +1,6 @@
 import gradio as gr
-import sys  
+import sys
+
 sys.path.append(".")
 sys.path.append("..")
 from model_loader import Model
@@ -34,7 +35,7 @@ def random_sample(model_name: str):
     return pil_img, model_name, latents
 
 
-def zoom(model_state, latents_state, dx=0, dy=0, dz=0, sxsy=[128, 128]):
+def transform(model_state, latents_state, dx=0, dy=0, dz=0, sxsy=[128, 128]):
     model = models[model_state]
     dx = dx
     dy = dy
@@ -42,34 +43,10 @@ def zoom(model_state, latents_state, dx=0, dy=0, dz=0, sxsy=[128, 128]):
     sx = sxsy[0]
     sy = sxsy[1]
     stop_points = []
-    img, latents_state = model.zoom(
-        latents_state, dz, sxsy=[sx, sy], stop_points=stop_points
-    )  # dz, sxsy=[sx, sy], stop_points=stop_points)
-    pil_img = cv_to_pil(img)
-    return pil_img, latents_state
 
-
-def translate(model_state, latents_state, dx=0, dy=0, dz=0, sxsy=[128, 128]):
-    model = models[model_state]
-
-    dx = dx
-    dy = dy
-    dz = dz
-    sx = sxsy[0]
-    sy = sxsy[1]
-    stop_points = []
-    zi = False
-    zo = False
-
-    img, latents_state = model.translate(
-        latents_state,
-        [dx, dy],
-        sxsy=[sx, sy],
-        stop_points=stop_points,
-        zoom_in=zi,
-        zoom_out=zo,
+    img, latents_state = model.transform(
+        latents_state, dz, dxy=[dx, dy], sxsy=[sx, sy], stop_points=stop_points
     )
-
     pil_img = cv_to_pil(img)
     return pil_img, latents_state
 
@@ -109,6 +86,7 @@ with gr.Blocks() as block:
             with gr.Row():
                 button = gr.Button("Random sample")
                 reset_btn = gr.Button("Reset")
+                change_style_bt = gr.Button("Change style")
 
             dx = gr.Slider(
                 minimum=-256, maximum=256, step_size=0.1, label="dx", value=0.0
@@ -117,14 +95,13 @@ with gr.Blocks() as block:
                 minimum=-256, maximum=256, step_size=0.1, label="dy", value=0.0
             )
             dz = gr.Slider(
-                minimum=-256, maximum=256, step_size=0.1, label="dz", value=0.0
+                minimum=-5, maximum=5, step_size=0.01, label="dz", value=0.0
             )
-
-            with gr.Row():
-                change_style_bt = gr.Button("Change style")
+            image = gr.Image(type="pil", label="").style(height=500)
 
         with gr.Column():
-            image = gr.Image(type="pil", label="")
+            html = gr.HTML(label="output")
+
     image.select(image_click, inputs=None, outputs=sxsy)
     button.click(
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
@@ -141,19 +118,19 @@ with gr.Blocks() as block:
         outputs=[image, latents_state],
     )
     dx.change(
-        translate,
+        transform,
         inputs=[model_state, latents_state, dx, dy, dz, sxsy],
         outputs=[image, latents_state],
         show_progress=False,
     )
     dy.change(
-        translate,
+        transform,
         inputs=[model_state, latents_state, dx, dy, dz, sxsy],
         outputs=[image, latents_state],
         show_progress=False,
     )
     dz.change(
-        zoom,
+        transform,
         inputs=[model_state, latents_state, dx, dy, dz, sxsy],
         outputs=[image, latents_state],
         show_progress=False,

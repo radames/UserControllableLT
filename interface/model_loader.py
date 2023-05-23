@@ -69,69 +69,18 @@ class Model:
 
         return (w1, w1_initial, f1)
 
-    def zoom(self, latents, dz, sxsy=[0, 0], stop_points=[]):
-        w1, w1_initial, f1 = self.latents_to_tensor(latents)
-        w1 = w1_initial.clone()
-
-        vec_num = abs(dz) / 5
-        dz = 100 * np.sign(dz)
-        x = torch.from_numpy(np.array([[[1.0, 0, dz]]], dtype=np.float32)).cuda()
-        f1 = torch.nn.functional.interpolate(f1, (256, 256))
-        y = f1[:, :, sxsy[1], sxsy[0]].unsqueeze(0)
-
-        if len(stop_points) > 0:
-            x = torch.cat(
-                [x, torch.zeros(x.shape[0], len(stop_points), x.shape[2]).cuda()], dim=1
-            )
-            tmp = []
-            for sp in stop_points:
-                tmp.append(f1[:, :, sp[1], sp[0]].unsqueeze(1))
-            y = torch.cat([y, torch.cat(tmp, dim=1)], dim=1)
-
-        if not self.use_average_code_as_input:
-            w_hat = self.net.encoder(
-                w1[:, self.target_layers].detach(),
-                x.detach(),
-                y.detach(),
-                alpha=vec_num,
-            )
-            w1 = w1.clone()
-            w1[:, self.target_layers] = w_hat
-        else:
-            w_hat = self.net.encoder(
-                self.net.latent_avg.unsqueeze(0)[:, self.target_layers].detach(),
-                x.detach(),
-                y.detach(),
-                alpha=vec_num,
-            )
-            w1 = w1.clone()
-            w1[:, self.target_layers] = (
-                w1.clone()[:, self.target_layers]
-                + w_hat
-                - self.net.latent_avg.unsqueeze(0)[:, self.target_layers]
-            )
-
-        x1, _ = self.net.decoder([w1], input_is_latent=True, randomize_noise=False)
-
-        x1 = self.net.face_pool(x1)
-        result = (
-            ((x1.detach()[0].permute(1, 2, 0) + 1.0) * 127.5).cpu().numpy()[:, :, ::-1]
-        )
-        return (
-            result,
-            {
-                "w1": w1.cpu().detach().numpy(),
-                "w1_initial": w1_initial.cpu().detach().numpy(),
-            },
-        )  # return latent vector along with the image
-
-    def translate(
-        self, latents, dxy, sxsy=[0, 0], stop_points=[], zoom_in=False, zoom_out=False
+    def transform(
+        self,
+        latents,
+        dz,
+        dxy,
+        sxsy=[0, 0],
+        stop_points=[],
+        zoom_in=False,
+        zoom_out=False,
     ):
         w1, w1_initial, f1 = self.latents_to_tensor(latents)
         w1 = w1_initial.clone()
-        dz = -5.0 if zoom_in else 0.0
-        dz = 5.0 if zoom_out else dz
 
         dxyz = np.array([dxy[0], dxy[1], dz], dtype=np.float32)
         dxy_norm = np.linalg.norm(dxyz[:2], ord=2)
