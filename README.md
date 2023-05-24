@@ -1,5 +1,5 @@
 ---
-title: UserControllableLT 
+title: User-Controllable Latent Transformer 
 emoji: 🕹️
 colorFrom: gray
 colorTo: green
