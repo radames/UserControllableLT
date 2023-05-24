@@ -8,6 +8,7 @@ from PIL import Image
 import cv2
 import io
 from huggingface_hub import snapshot_download
+import json
 
 models_path = snapshot_download(repo_id="radames/UserControllableLT", repo_type="model")
 
@@ -39,6 +40,12 @@ async (img) => {
   canvasEl.loadBase64Image(img);
 }   
 """
+reset_stop_points = """
+async () => {
+  const canvasEl = document.getElementById("canvas-root");
+  canvasEl.resetStopPoints();
+}
+"""
 
 
 def cv_to_pil(img):
@@ -52,19 +59,15 @@ def random_sample(model_name: str):
     return pil_img, model_name, latents
 
 
-def transform(model_state, latents_state, dxdysxsy="0,0,128,128", dz=0):
-    dx, dy, sx, sy = [
-        int(float(x)) if x.strip() != "" else 0 for x in dxdysxsy.split(",")
-    ]
-    print(dx, dy, sx, sy)
-    model = models[model_state]
-    dx = dx
-    dy = dy
-    dz = dz
-    sx = sx
-    sy = sy
-    stop_points = []
+def transform(model_state, latents_state, dxdysxsy="{}", dz=0):
+    data = json.loads(dxdysxsy)
 
+    model = models[model_state]
+    dx = int(data["dx"])
+    dy = int(data["dy"])
+    sx = int(data["sx"])
+    sy = int(data["sy"])
+    stop_points = [[int(x), int(y)] for x, y in data["stopPoints"]]
     img, latents_state = model.transform(
         latents_state, dz, dxy=[dx, dy], sxsy=[sx, sy], stop_points=stop_points
     )
@@ -107,8 +110,12 @@ with gr.Blocks() as block:
                 button = gr.Button("Random sample")
                 reset_btn = gr.Button("Reset")
                 change_style_bt = gr.Button("Change style")
-            dxdysxsy = gr.Textbox(label="dxdysxsy", value="0,0,128,128", elem_id="dxdysxsy" ,visible=False)
-            dz = gr.Slider(minimum=-5, maximum=5, step_size=0.01, label="zoom", value=0.0)
+            dxdysxsy = gr.Textbox(
+                label="dxdysxsy", value="{}", elem_id="dxdysxsy", visible=False
+            )
+            dz = gr.Slider(
+                minimum=-5, maximum=5, step_size=0.01, label="zoom", value=0.0
+            )
             image = gr.Image(type="pil", visible=False)
 
         with gr.Column():
@@ -121,7 +128,8 @@ with gr.Blocks() as block:
         reset,
         inputs=[model_state, latents_state],
         outputs=[image, latents_state],
-    )
+        queue=False,
+    ).then(None, None, None, _js=reset_stop_points, queue=False)
 
     change_style_bt.click(
         change_style,
@@ -142,7 +150,9 @@ with gr.Blocks() as block:
     )
     image.change(None, inputs=[image], outputs=None, _js=image_change)
     block.load(None, None, None, _js=load_js)
-    block.load(random_sample, inputs=[model_name], outputs=[image, model_state, latents_state])
+    block.load(
+        random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
+    )
 
 block.queue()
 block.launch()
