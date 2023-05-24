@@ -97,8 +97,18 @@ def image_click(evt: gr.SelectData):
 with gr.Blocks() as block:
     model_state = gr.State(value="cat")
     latents_state = gr.State({})
-    gr.Markdown("# UserControllableLT: User controllable latent transformer")
-    gr.Markdown("## Select model")
+    gr.Markdown("""# UserControllableLT: User Controllable Latent Transformer
+Unofficial Gradio Demo
+
+**Author**: Yuki Endo\\
+**Paper**:  [2208.12408](http://arxiv.org/abs/2208.12408)\\
+**Code**: [UserControllableLT](https://github.com/endo-yuki-t/UserControllableLT)
+
+<small>
+Double click to add or remove stop points.
+<small>
+""")
+
     with gr.Row():
         with gr.Column():
             model_name = gr.Dropdown(
