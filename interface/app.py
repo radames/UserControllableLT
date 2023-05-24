@@ -175,5 +175,5 @@ Double click to add or remove stop points.
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
     )
 
-block.queue(concurrency_count=4, max_size=20)
+block.queue(concurrency_count=4, max_size=20, api_open=False)
 block.launch(show_api=False)
