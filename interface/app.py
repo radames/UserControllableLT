@@ -24,6 +24,23 @@ models_files = {
 models = {name: Model(models_path + "/" + path) for name, path in models_files.items()}
 
 
+canvas_html = """<draggan-canvas id="canvas-root" style='display:flex;max-width: 500px;margin: 0 auto;'></draggan-canvas>"""
+load_js = """
+async () => {
+  const script = document.createElement('script');
+  script.type = "module"
+  script.src = "file=templates/index.js"
+  document.head.appendChild(script);
+}
+"""
+image_change = """
+async (img) => {
+  const canvasEl = document.getElementById("canvas-root");
+  canvasEl.loadBase64Image(img);
+}   
+"""
+
+
 def cv_to_pil(img):
     return Image.fromarray(cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2RGB))
 
@@ -35,13 +52,17 @@ def random_sample(model_name: str):
     return pil_img, model_name, latents
 
 
-def transform(model_state, latents_state, dx=0, dy=0, dz=0, sxsy=[128, 128]):
+def transform(model_state, latents_state, dxdysxsy="0,0,128,128", dz=0):
+    dx, dy, sx, sy = [
+        int(float(x)) if x.strip() != "" else 0 for x in dxdysxsy.split(",")
+    ]
+    print(dx, dy, sx, sy)
     model = models[model_state]
     dx = dx
     dy = dy
     dz = dz
-    sx = sxsy[0]
-    sy = sxsy[1]
+    sx = sx
+    sy = sy
     stop_points = []
 
     img, latents_state = model.transform(
@@ -73,7 +94,6 @@ def image_click(evt: gr.SelectData):
 with gr.Blocks() as block:
     model_state = gr.State(value="cat")
     latents_state = gr.State({})
-    sxsy = gr.State([128, 128])
     gr.Markdown("# UserControllableLT: User controllable latent transformer")
     gr.Markdown("## Select model")
     with gr.Row():
@@ -87,22 +107,13 @@ with gr.Blocks() as block:
                 button = gr.Button("Random sample")
                 reset_btn = gr.Button("Reset")
                 change_style_bt = gr.Button("Change style")
-
-            dx = gr.Slider(
-                minimum=-256, maximum=256, step_size=0.1, label="dx", value=0.0
-            )
-            dy = gr.Slider(
-                minimum=-256, maximum=256, step_size=0.1, label="dy", value=0.0
-            )
-            dz = gr.Slider(
-                minimum=-5, maximum=5, step_size=0.01, label="dz", value=0.0
-            )
-            image = gr.Image(type="pil", label="").style(height=500)
+            dxdysxsy = gr.Textbox(label="dxdysxsy", value="0,0,128,128", elem_id="dxdysxsy" ,visible=False)
+            dz = gr.Slider(minimum=-5, maximum=5, step_size=0.01, label="zoom", value=0.0)
+            image = gr.Image(type="pil", visible=False)
 
         with gr.Column():
-            html = gr.HTML(label="output")
+            html = gr.HTML(canvas_html, label="output")
 
-    image.select(image_click, inputs=None, outputs=sxsy)
     button.click(
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
     )
@@ -117,24 +128,21 @@ with gr.Blocks() as block:
         inputs=[image, model_state, latents_state],
         outputs=[image, latents_state],
     )
-    dx.change(
+    dxdysxsy.change(
         transform,
-        inputs=[model_state, latents_state, dx, dy, dz, sxsy],
-        outputs=[image, latents_state],
-        show_progress=False,
-    )
-    dy.change(
-        transform,
-        inputs=[model_state, latents_state, dx, dy, dz, sxsy],
+        inputs=[model_state, latents_state, dxdysxsy, dz],
         outputs=[image, latents_state],
         show_progress=False,
     )
     dz.change(
         transform,
-        inputs=[model_state, latents_state, dx, dy, dz, sxsy],
+        inputs=[model_state, latents_state, dxdysxsy, dz],
         outputs=[image, latents_state],
         show_progress=False,
     )
+    image.change(None, inputs=[image], outputs=None, _js=image_change)
+    block.load(None, None, None, _js=load_js)
+    block.load(random_sample, inputs=[model_name], outputs=[image, model_state, latents_state])
 
 block.queue()
 block.launch()
