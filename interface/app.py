@@ -47,6 +47,9 @@ async () => {
 }
 """
 
+default_dxdysxsy = json.dumps(
+    {"dx": 1, "dy": 0, "sx": 128, "sy": 128, "stopPoints": []}
+)
 
 def cv_to_pil(img):
     return Image.fromarray(cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2RGB))
@@ -59,7 +62,10 @@ def random_sample(model_name: str):
     return pil_img, model_name, latents
 
 
-def transform(model_state, latents_state, dxdysxsy="{}", dz=0):
+def transform(model_state, latents_state, dxdysxsy=default_dxdysxsy, dz=0):
+    if "w1" not in latents_state or "w1_initial" not in latents_state:
+        raise gr.Error("Generate a random sample first")
+
     data = json.loads(dxdysxsy)
 
     model = models[model_state]
@@ -97,7 +103,8 @@ def image_click(evt: gr.SelectData):
 with gr.Blocks() as block:
     model_state = gr.State(value="cat")
     latents_state = gr.State({})
-    gr.Markdown("""# UserControllableLT: User Controllable Latent Transformer
+    gr.Markdown(
+        """# UserControllableLT: User Controllable Latent Transformer
 Unofficial Gradio Demo
 
 **Author**: Yuki Endo\\
@@ -107,7 +114,8 @@ Unofficial Gradio Demo
 <small>
 Double click to add or remove stop points.
 <small>
-""")
+"""
+    )
 
     with gr.Row():
         with gr.Column():
@@ -121,10 +129,13 @@ Double click to add or remove stop points.
                 reset_btn = gr.Button("Reset")
                 change_style_bt = gr.Button("Change style")
             dxdysxsy = gr.Textbox(
-                label="dxdysxsy", value="{}", elem_id="dxdysxsy", visible=False
+                label="dxdysxsy",
+                value=default_dxdysxsy,
+                elem_id="dxdysxsy",
+                visible=False,
             )
             dz = gr.Slider(
-                minimum=-5, maximum=5, step_size=0.01, label="zoom", value=0.0
+                minimum=-15, maximum=15, step_size=0.01, label="zoom", value=0.0
             )
             image = gr.Image(type="pil", visible=False)
 
@@ -164,5 +175,5 @@ Double click to add or remove stop points.
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
     )
 
-block.queue()
-block.launch()
+block.queue(concurrency_count=4, max_size=20)
+block.launch(show_api=False)

@@ -84,6 +84,8 @@ class Model:
 
         dxyz = np.array([dxy[0], dxy[1], dz], dtype=np.float32)
         dxy_norm = np.linalg.norm(dxyz[:2], ord=2)
+        epsilon = 1e-8 
+        dxy_norm = dxy_norm + epsilon
         dxyz[:2] = dxyz[:2] / dxy_norm
         vec_num = dxy_norm / 10
 
