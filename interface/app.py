@@ -29,7 +29,7 @@ load_js = """
 async () => {
   const script = document.createElement('script');
   script.type = "module"
-  script.src = "file=templates/index.js"
+  script.src = "file=custom_component.js"
   document.head.appendChild(script);
 }
 """
