@@ -10,6 +10,9 @@ import io
 from huggingface_hub import snapshot_download
 import json
 
+# disable if running on another environment
+RESIZE = True
+
 models_path = snapshot_download(repo_id="radames/UserControllableLT", repo_type="model")
 
 
@@ -52,7 +55,10 @@ default_dxdysxsy = json.dumps(
 )
 
 def cv_to_pil(img):
-    return Image.fromarray(cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2RGB))
+    img = Image.fromarray(cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2RGB))
+    if RESIZE:
+        img = img.resize((128, 128))
+    return img
 
 
 def random_sample(model_name: str):
@@ -175,5 +181,5 @@ Double click to add or remove stop points.
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
     )
 
-block.queue(api_open=False)
+# block.queue(api_open=False)
 block.launch(show_api=False)
