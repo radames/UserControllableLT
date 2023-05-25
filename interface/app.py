@@ -145,7 +145,7 @@ Double click to add or remove stop points.
             dz = gr.Slider(
                 minimum=-15, maximum=15, step_size=0.01, label="zoom", value=0.0
             )
-            image = gr.Image(type="pil", visible=True, preprocess=False)
+            image = gr.Image(type="pil", visible=False, preprocess=False)
 
         with gr.Column():
             html = gr.HTML(canvas_html, label="output")
