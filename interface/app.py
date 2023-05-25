@@ -6,7 +6,6 @@ sys.path.append("..")
 from model_loader import Model
 from PIL import Image
 import cv2
-import io
 from huggingface_hub import snapshot_download
 import json
 
@@ -66,7 +65,6 @@ def random_sample(model_name: str):
     model = models[model_name]
     img, latents = model.random_sample()
     img_pil = cv_to_pil(img)
-    print(img_pil)
     return img_pil, model_name, latents
 
 
