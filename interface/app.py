@@ -38,9 +38,9 @@ async () => {
 }
 """
 image_change = """
-async (img) => {
+async (base64img) => {
   const canvasEl = document.getElementById("canvas-root");
-  canvasEl.loadBase64Image(img);
+  canvasEl.loadBase64Image(base64img);
 }   
 """
 reset_stop_points = """
@@ -54,6 +54,7 @@ default_dxdysxsy = json.dumps(
     {"dx": 1, "dy": 0, "sx": 128, "sy": 128, "stopPoints": []}
 )
 
+
 def cv_to_pil(img):
     img = Image.fromarray(cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2RGB))
     if RESIZE:
@@ -64,8 +65,9 @@ def cv_to_pil(img):
 def random_sample(model_name: str):
     model = models[model_name]
     img, latents = model.random_sample()
-    pil_img = cv_to_pil(img)
-    return pil_img, model_name, latents
+    img_pil = cv_to_pil(img)
+    print(img_pil)
+    return img_pil, model_name, latents
 
 
 def transform(model_state, latents_state, dxdysxsy=default_dxdysxsy, dz=0):
@@ -83,22 +85,22 @@ def transform(model_state, latents_state, dxdysxsy=default_dxdysxsy, dz=0):
     img, latents_state = model.transform(
         latents_state, dz, dxy=[dx, dy], sxsy=[sx, sy], stop_points=stop_points
     )
-    pil_img = cv_to_pil(img)
-    return pil_img, latents_state
+    img_pil = cv_to_pil(img)
+    return img_pil, latents_state
 
 
 def change_style(image: Image.Image, model_state, latents_state):
     model = models[model_state]
     img, latents_state = model.change_style(latents_state)
-    pil_img = cv_to_pil(img)
-    return pil_img, latents_state
+    img_pil = cv_to_pil(img)
+    return img_pil, latents_state
 
 
 def reset(model_state, latents_state):
     model = models[model_state]
     img, latents_state = model.reset(latents_state)
-    pil_img = cv_to_pil(img)
-    return pil_img, latents_state
+    img_pil = cv_to_pil(img)
+    return img_pil, latents_state
 
 
 def image_click(evt: gr.SelectData):
@@ -143,7 +145,7 @@ Double click to add or remove stop points.
             dz = gr.Slider(
                 minimum=-15, maximum=15, step_size=0.01, label="zoom", value=0.0
             )
-            image = gr.Image(type="pil", visible=False)
+            image = gr.Image(type="pil", visible=True, preprocess=False)
 
         with gr.Column():
             html = gr.HTML(canvas_html, label="output")
