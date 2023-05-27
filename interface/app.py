@@ -4,6 +4,7 @@ import sys
 sys.path.append(".")
 sys.path.append("..")
 from model_loader import Model
+from inversion import InversionModel
 from PIL import Image
 import cv2
 from huggingface_hub import snapshot_download
@@ -25,7 +26,7 @@ models_files = {
 }
 
 models = {name: Model(models_path + "/" + path) for name, path in models_files.items()}
-
+inversion_model = InversionModel(models_path + "/psp_ffhq_encode.pt", models_path + "/shape_predictor_68_face_landmarks.dat")
 
 canvas_html = """<draggan-canvas id="canvas-root" style='display:flex;max-width: 500px;margin: 0 auto;'></draggan-canvas>"""
 load_js = """

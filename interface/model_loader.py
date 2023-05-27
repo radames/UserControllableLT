@@ -12,7 +12,7 @@ class Model:
     ):
         self.truncation = truncation
         self.use_average_code_as_input = use_average_code_as_input
-        ckpt = torch.load(checkpoint_path, map_location="cuda")
+        ckpt = torch.load(checkpoint_path, map_location="cpu")
         opts = ckpt["opts"]
         opts["checkpoint_path"] = checkpoint_path
         self.opts = Namespace(**ckpt["opts"])
