@@ -26,7 +26,10 @@ models_files = {
 }
 
 models = {name: Model(models_path + "/" + path) for name, path in models_files.items()}
-inversion_model = InversionModel(models_path + "/psp_ffhq_encode.pt", models_path + "/shape_predictor_68_face_landmarks.dat")
+inversion_model = InversionModel(
+    models_path + "/psp_ffhq_encode.pt",
+    models_path + "/shape_predictor_68_face_landmarks.dat",
+)
 
 canvas_html = """<draggan-canvas id="canvas-root" style='display:flex;max-width: 500px;margin: 0 auto;'></draggan-canvas>"""
 load_js = """
@@ -57,8 +60,8 @@ default_dxdysxsy = json.dumps(
 
 def cv_to_pil(img):
     img = Image.fromarray(cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2RGB))
-    if RESIZE:
-        img = img.resize((128, 128))
+    # if RESIZE:
+    # img = img.resize((128, 128))
     return img
 
 
@@ -67,6 +70,11 @@ def random_sample(model_name: str):
     img, latents = model.random_sample()
     img_pil = cv_to_pil(img)
     return img_pil, model_name, latents
+
+
+def load_from_img_file(image_path: str):
+    img_pil, latents = inversion_model.inference(image_path)
+    return img_pil, "ffhq", latents
 
 
 def transform(model_state, latents_state, dxdysxsy=default_dxdysxsy, dz=0):
@@ -108,7 +116,7 @@ def image_click(evt: gr.SelectData):
 
 
 with gr.Blocks() as block:
-    model_state = gr.State(value="cat")
+    model_state = gr.State(value="ffhq")
     latents_state = gr.State({})
     gr.Markdown(
         """# UserControllableLT: User Controllable Latent Transformer
@@ -129,7 +137,7 @@ Double click to add or remove stop points.
             model_name = gr.Dropdown(
                 choices=list(models_files.keys()),
                 label="Select Pretrained Model",
-                value="cat",
+                value="ffhq",
             )
             with gr.Row():
                 button = gr.Button("Random sample")
@@ -145,7 +153,21 @@ Double click to add or remove stop points.
                 minimum=-15, maximum=15, step_size=0.01, label="zoom", value=0.0
             )
             image = gr.Image(type="pil", visible=False, preprocess=False)
-
+            with gr.Accordion(label="Upload your face image", open=False):
+                gr.Markdown("<small> This only works on FFHQ model </small>")
+                with gr.Row():
+                    image_path = gr.Image(type="filepath", label="input image", interactive=True)
+                    examples = gr.Examples(
+                        examples=[
+                            "examples/benedict.jpg",
+                            "examples/obama.jpg",
+                            "examples/me.jpg",
+                        ],
+                        fn=load_from_img_file,
+                        run_on_click=True,
+                        inputs=[image_path],
+                        outputs=[image, model_state, latents_state],
+                    )
         with gr.Column():
             html = gr.HTML(canvas_html, label="output")
 
@@ -177,6 +199,8 @@ Double click to add or remove stop points.
         show_progress=False,
     )
     image.change(None, inputs=[image], outputs=None, _js=image_change)
+    image_path.upload(load_from_img_file, inputs=[image_path], outputs=[image, model_state, latents_state])
+    
     block.load(None, None, None, _js=load_js)
     block.load(
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]

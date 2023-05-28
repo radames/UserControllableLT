@@ -6,3 +6,5 @@ einops
 ninja==1.10.2
 einops==0.3.2
 gradio
+dlib==19.24.1
+scipy

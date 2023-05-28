@@ -25,7 +25,7 @@ class pSp(nn.Module):
 		super(pSp, self).__init__()
 		self.set_opts(opts)
 		# compute number of style inputs based on the output resolution
-		self.opts.n_styles = int(math.log(self.opts.output_size, 2)) * 2 - 2
+		self.opts.n_styles = 18 #int(math.log(self.opts.output_size, 2)) * 2 - 2
 		# Define architecture
 		self.encoder = self.set_encoder()
 		self.decoder = Generator(self.opts.output_size, 512, 8)

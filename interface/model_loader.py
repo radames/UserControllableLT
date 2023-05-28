@@ -90,7 +90,7 @@ class Model:
         vec_num = dxy_norm / 10
 
         x = torch.from_numpy(np.array([[dxyz]], dtype=np.float32)).cuda()
-        f1 = torch.nn.functional.interpolate(f1, (256, 256))
+        f1 = torch.nn.functional.interpolate(f1, (1024,1024))
         y = f1[:, :, sxsy[1], sxsy[0]].unsqueeze(0)
 
         if len(stop_points) > 0:
@@ -166,7 +166,7 @@ class Model:
             result,
             {
                 "w1": w1_new.cpu().detach().numpy(),
-                "w1_initial": w1_new.cpu().detach().numpy(),
+                "w1_initial": w1_initial.cpu().detach().numpy(),
             },
         )
 
