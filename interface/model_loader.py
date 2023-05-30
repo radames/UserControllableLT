@@ -84,13 +84,13 @@ class Model:
 
         dxyz = np.array([dxy[0], dxy[1], dz], dtype=np.float32)
         dxy_norm = np.linalg.norm(dxyz[:2], ord=2)
-        epsilon = 1e-8 
+        epsilon = 1e-8
         dxy_norm = dxy_norm + epsilon
         dxyz[:2] = dxyz[:2] / dxy_norm
         vec_num = dxy_norm / 10
 
         x = torch.from_numpy(np.array([[dxyz]], dtype=np.float32)).cuda()
-        f1 = torch.nn.functional.interpolate(f1, (1024,1024))
+        f1 = torch.nn.functional.interpolate(f1, (256, 256))
         y = f1[:, :, sxsy[1], sxsy[0]].unsqueeze(0)
 
         if len(stop_points) > 0:

@@ -55,9 +55,7 @@ class InversionModel:
             toc = time.time()
             print("Inference took {:.4f} seconds.".format(toc - tic))
 
-        output_image = tensor2im(result_image[0])
-        image = np.array(output_image.resize((256, 256)))
-        res_image = Image.fromarray(image)
+        res_image = tensor2im(result_image[0])
         return (
             res_image,
             {

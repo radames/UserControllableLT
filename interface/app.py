@@ -60,8 +60,8 @@ default_dxdysxsy = json.dumps(
 
 def cv_to_pil(img):
     img = Image.fromarray(cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2RGB))
-    # if RESIZE:
-    # img = img.resize((128, 128))
+    if RESIZE:
+        img = img.resize((128, 128))
     return img
 
 
@@ -74,6 +74,8 @@ def random_sample(model_name: str):
 
 def load_from_img_file(image_path: str):
     img_pil, latents = inversion_model.inference(image_path)
+    if RESIZE:
+        img_pil = img_pil.resize((128, 128))
     return img_pil, "ffhq", latents
 
 
@@ -156,12 +158,14 @@ Double click to add or remove stop points.
             with gr.Accordion(label="Upload your face image", open=False):
                 gr.Markdown("<small> This only works on FFHQ model </small>")
                 with gr.Row():
-                    image_path = gr.Image(type="filepath", label="input image", interactive=True)
+                    image_path = gr.Image(
+                        type="filepath", label="input image", interactive=True
+                    )
                     examples = gr.Examples(
                         examples=[
-                            "examples/benedict.jpg",
-                            "examples/obama.jpg",
-                            "examples/me.jpg",
+                            "interface/examples/benedict.jpg",
+                            "interface/examples/obama.jpg",
+                            "interface/examples/me.jpg",
                         ],
                         fn=load_from_img_file,
                         run_on_click=True,
@@ -199,8 +203,12 @@ Double click to add or remove stop points.
         show_progress=False,
     )
     image.change(None, inputs=[image], outputs=None, _js=image_change)
-    image_path.upload(load_from_img_file, inputs=[image_path], outputs=[image, model_state, latents_state])
-    
+    image_path.upload(
+        load_from_img_file,
+        inputs=[image_path],
+        outputs=[image, model_state, latents_state],
+    )
+
     block.load(None, None, None, _js=load_js)
     block.load(
         random_sample, inputs=[model_name], outputs=[image, model_state, latents_state]
