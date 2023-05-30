@@ -12,7 +12,7 @@ class Model:
     ):
         self.truncation = truncation
         self.use_average_code_as_input = use_average_code_as_input
-        ckpt = torch.load(checkpoint_path, map_location="cuda")
+        ckpt = torch.load(checkpoint_path, map_location="cpu")
         opts = ckpt["opts"]
         opts["checkpoint_path"] = checkpoint_path
         self.opts = Namespace(**ckpt["opts"])
@@ -84,7 +84,7 @@ class Model:
 
         dxyz = np.array([dxy[0], dxy[1], dz], dtype=np.float32)
         dxy_norm = np.linalg.norm(dxyz[:2], ord=2)
-        epsilon = 1e-8 
+        epsilon = 1e-8
         dxy_norm = dxy_norm + epsilon
         dxyz[:2] = dxyz[:2] / dxy_norm
         vec_num = dxy_norm / 10
@@ -166,7 +166,7 @@ class Model:
             result,
             {
                 "w1": w1_new.cpu().detach().numpy(),
-                "w1_initial": w1_new.cpu().detach().numpy(),
+                "w1_initial": w1_initial.cpu().detach().numpy(),
             },
         )
 
